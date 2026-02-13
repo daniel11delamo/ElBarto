@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fill in the Gap Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+      background-color: #f4f4f4;
+    }
+    .game-container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #nextBtn {
+      margin-top: 20px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="game-container">
+  <h2>Fill in the Gap</h2>
+  <p id="round"></p>
+  <p id="sentence"></p>
+  <div id="options"></div>
+  <p id="feedback"></p>
+  <button id="nextBtn" onclick="nextQuestion()">Next</button>
+</div>
+
+<script>
+  const questions = [
+    {
+      sentence: "She _____ to the store yesterday.",
+      options: ["go", "went", "gone", "going"],
+      answer: "went"
+    },
+    {
+      sentence: "They have _____ their homework.",
+      options: ["finish", "finished", "finishing", "finishes"],
+      answer: "finished"
+    },
+    {
+      sentence: "I am looking forward to _____ you.",
+      options: ["see", "saw", "seeing", "seen"],
+      answer: "seeing"
+    },
+    {
+      sentence: "He is the _____ player on the team.",
+      options: ["good", "better", "best", "well"],
+      answer: "best"
+    },
+    {
+      sentence: "We will call you when we _____ there.",
+      options: ["arrive", "arrived", "arrives", "arriving"],
+      answer: "arrive"
+    },
+    {
+      sentence: "There isn’t _____ milk left.",
+      options: ["many", "much", "few", "several"],
+      answer: "much"
+    },
+    {
+      sentence: "She speaks English very _____.",
+      options: ["good", "well", "better", "best"],
+      answer: "well"
+    },
+    {
+      sentence: "This book is _____ than the last one.",
+      options: ["interesting", "more interesting", "most interesting", "interest"],
+      answer: "more interesting"
+    },
+    {
+      sentence: "He has lived here _____ 2010.",
+      options: ["since", "for", "from", "at"],
+      answer: "since"
+    },
+    {
+      sentence: "If it rains, we _____ stay home.",
+      options: ["will", "would", "did", "had"],
+      answer: "will"
+    }
+  ];
+
+  let currentQuestion = 0;
+  let score = 0;
+
+  function loadQuestion() {
+    document.getElementById("round").innerText = 
+      "Round " + (currentQuestion + 1) + " of " + questions.length;
+
+    document.getElementById("sentence").innerText =
+      questions[currentQuestion].sentence;
+
+    const optionsDiv = document.getElementById("options");
+    optionsDiv.innerHTML = "";
+    document.getElementById("feedback").innerText = "";
+    document.getElementById("nextBtn").style.display = "none";
+
+    questions[currentQuestion].options.forEach(option => {
+      const btn = document.createElement("button");
+      btn.innerText = option;
+      btn.onclick = () => checkAnswer(option);
+      optionsDiv.appendChild(btn);
+    });
+  }
+
+  function checkAnswer(selected) {
+    const correct = questions[currentQuestion].answer;
+    const feedback = document.getElementById("feedback");
+
+    if (selected === correct) {
+      feedback.innerText = "✅ Correct!";
+      score++;
+    } else {
+      feedback.innerText = "❌ Incorrect! Correct answer: " + correct;
+    }
+
+    document.getElementById("nextBtn").style.display = "block";
+  }
+
+  function nextQuestion() {
+    currentQuestion++;
+    if (currentQuestion < questions.length) {
+      loadQuestion();
+    } else {
+      document.querySelector(".game-container").innerHTML =
+        "<h2>Game Over!</h2><p>Your score: " + score + " / " + questions.length + "</p>";
+    }
+  }
+
+  loadQuestion();
+</script>
+
+</body>
+</html>
