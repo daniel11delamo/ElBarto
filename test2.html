@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hurricane Game</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    .screen {
+      display: none;
+      padding: 40px;
+    }
+
+    /* MASSIVE HURRICANE START SCREEN */
+    #welcomeScreen {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: white;
+      background-image: url("https://images.unsplash.com/photo-1500375592092-40eb2168fd21");
+      background-size: cover;
+      background-position: center;
+    }
+
+    #welcomeScreen h1 {
+      font-size: 60px;
+      background: rgba(0,0,0,0.6);
+      padding: 25px;
+      border-radius: 12px;
+    }
+
+    #rulesScreen {
+      background-color: #111;
+      color: white;
+      min-height: 100vh;
+    }
+
+    #gameScreen {
+      background-color: #f4f4f4;
+      min-height: 100vh;
+    }
+
+    .game-container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
+
+    button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 12px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #animal {
+      font-size: 80px;
+      margin: 10px;
+    }
+
+    #scoreboard {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    #finalScreen {
+      display: none;
+      background: linear-gradient(to right, #ffcc00, #ff6699);
+      height: 100vh;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 40px;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+<!-- MASSIVE PHOTO SCREEN -->
+<div id="welcomeScreen">
+  <h1>Welcome home Hurricane 🌪️</h1>
+  <button onclick="goToRules()">Enter</button>
+</div>
+
+<!-- RULES SCREEN -->
+<div id="rulesScreen" class="screen">
+  <h1>Hello and welcome to the game.</h1>
+  <h2>The rules are these:</h2>
+  <p>• You will play 10 rounds.</p>
+  <p>• Each round has one sentence with a missing word.</p>
+  <p>• Choose the correct answer from 4 options.</p>
+  <p>• You get 1 point for each correct answer.</p>
+  <p>• Cute animals may appear. Do not panic.</p>
+  <button onclick="startGame()">Start Game</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="gameScreen" class="screen">
+  <div class="game-container">
+    <div id="scoreboard">Score: 0 / 0</div>
+    <h2 id="round"></h2>
+    <p id="sentence"></p>
+    <div id="options"></div>
+    <p id="feedback"></p>
+    <div id="animal"></div>
+    <button id="nextBtn" onclick="nextQuestion()" style="display:none;">Next</button>
+  </div>
+</div>
+
+<!-- FINAL CELEBRATION -->
+<div id="finalScreen">
+  🎉 Congratulations you sneaky sausage 🎉
+  <p id="finalScore"></p>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<!-- SOUND EFFECTS -->
+<audio id="correctSound" src="https://www.soundjay.com/animal/duck-quack-5.mp3"></audio>
+<audio id="wrongSound" src="https://www.soundjay.com/human/scream-01.mp3"></audio>
+
+<script>
+  const animals = ["🐶","🐵","🦊","🐸","🐼","🦁","🐯","🐷","🐧","🐔"];
+
+  const questions = [
+    { sentence: "She _____ to the store yesterday.",
+      options: ["go","went","gone","going"], answer: "went" },
+    { sentence: "They have _____ their homework.",
+      options: ["finish","finished","finishing","finishes"], answer: "finished" },
+    { sentence: "I am looking forward to _____ you.",
+      options: ["see","saw","seeing","seen"], answer: "seeing" },
+    { sentence: "He is the _____ player on the team.",
+      options: ["good","better","best","well"], answer: "best" },
+    { sentence: "We will call you when we _____ there.",
+      options: ["arrive","arrived","arrives","arriving"], answer: "arrive" },
+    { sentence: "There isn’t _____ milk left.",
+      options: ["many","much","few","several"], answer: "much" },
+    { sentence: "She speaks English very _____.",
+      options: ["good","well","better","best"], answer: "well" },
+    { sentence: "This book is _____ than the last one.",
+      options: ["interesting","more interesting","most interesting","interest"], answer: "more interesting" },
+    { sentence: "He has lived here _____ 2010.",
+      options: ["since","for","from","at"], answer: "since" },
+    { sentence: "If it rains, we _____ stay home.",
+      options: ["will","would","did","had"], answer: "will" }
+  ];
+
+  let currentQuestion = 0;
+  let score = 0;
+  let answered = 0;
+
+  function goToRules() {
+    document.getElementById("welcomeScreen").style.display = "none";
+    document.getElementById("rulesScreen").style.display = "block";
+  }
+
+  function startGame() {
+    document.getElementById("rulesScreen").style.display = "none";
+    document.getElementById("gameScreen").style.display = "block";
+    loadQuestion();
+  }
+
+  function loadQuestion() {
+    document.getElementById("animal").innerText = "";
+    document.getElementById("feedback").innerText = "";
+    document.getElementById("nextBtn").style.display = "none";
+
+    document.getElementById("round").innerText =
+      "Round " + (currentQuestion + 1) + " of " + questions.length;
+
+    document.getElementById("sentence").innerText =
+      questions[currentQuestion].sentence;
+
+    const optionsDiv = document.getElementById("options");
+    optionsDiv.innerHTML = "";
+
+    questions[currentQuestion].options.forEach(option => {
+      const btn = document.createElement("button");
+      btn.innerText = option;
+      btn.onclick = () => checkAnswer(option);
+      optionsDiv.appendChild(btn);
+    });
+
+    updateScoreboard();
+  }
+
+  function checkAnswer(selected) {
+    const correct = questions[currentQuestion].answer;
+    answered++;
+
+    if (selected === correct) {
+      score++;
+      document.getElementById("feedback").innerText = "✅ Correct!";
+      document.getElementById("correctSound").play();
+    } else {
+      document.getElementById("feedback").innerText =
+        "❌ Nein Nein Nein! Correct answer: " + correct;
+      document.getElementById("wrongSound").play();
+    }
+
+    document.getElementById("animal").innerText =
+      animals[currentQuestion];
+
+    updateScoreboard();
+    document.getElementById("nextBtn").style.display = "block";
+  }
+
+  function updateScoreboard() {
+    document.getElementById("scoreboard").innerText =
+      "Score: " + score + " / " + answered;
+  }
+
+  function nextQuestion() {
+    currentQuestion++;
+    if (currentQuestion < questions.length) {
+      loadQuestion();
+    } else {
+      endGame();
+    }
+  }
+
+  function endGame() {
+    document.getElementById("gameScreen").style.display = "none";
+    document.getElementById("finalScreen").style.display = "flex";
+    document.getElementById("finalScore").innerText =
+      "Final Score: " + score + " / " + questions.length;
+    startConfetti();
+  }
+
+  /* SIMPLE CONFETTI */
+  const canvas = document.getElementById("confetti");
+  const ctx = canvas.getContext("2d");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  let pieces = [];
+  for (let i = 0; i < 150; i++) {
+    pieces.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 6 + 2,
+      color: `hsl(${Math.random()*360},100%,50%)`,
+      speed: Math.random() * 3 + 2
+    });
+  }
+
+  function startConfetti() {
+    function update() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      pieces.forEach(p => {
+        p.y += p.speed;
+        if (p.y > canvas.height) p.y = 0;
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.radius,0,Math.PI*2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+      });
+      requestAnimationFrame(update);
+    }
+    update();
+  }
+</script>
+
+</body>
+</html>
